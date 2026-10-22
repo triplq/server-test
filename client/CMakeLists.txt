@@ -11,6 +11,10 @@ qt_add_executable(client
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    hellopage.h hellopage.cpp hellopage.ui
+    signuppage.h signuppage.cpp signuppage.ui
+    loginpage.h loginpage.cpp loginpage.ui
+
 )
 
 target_link_libraries(client

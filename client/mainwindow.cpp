@@ -1,15 +1,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "hellopage.h"
+#include "loginpage.h"
+#include "signuppage.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    socket = new QTcpSocket(this);
-    connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
-    connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
+    connectToServer();
+    showHelloPage();
 }
 
 MainWindow::~MainWindow()
@@ -17,9 +20,33 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_connectButton_clicked()
-{
+void MainWindow::connectToServer() {
+    socket = new QTcpSocket(this);
+    connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
+    connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
+
     socket->connectToHost("127.0.0.1", 2323);
+}
+
+void MainWindow::showHelloPage() {
+    HelloPage *helloPage = new HelloPage();
+    ui->stackedWidget->addWidget(helloPage);
+    ui->stackedWidget->setCurrentWidget(helloPage);
+
+    connect(helloPage, &HelloPage::signupPageClicked, this, &MainWindow::showSignupPage);
+    connect(helloPage, &HelloPage::loginPageClicked, this, &MainWindow::showLoginPage);
+}
+
+void MainWindow::showLoginPage() {
+    LogInPage *loginPage = new LogInPage();
+    ui->stackedWidget->addWidget(loginPage);
+    ui->stackedWidget->setCurrentWidget(loginPage);
+}
+
+void MainWindow::showSignupPage() {
+    SignUpPage *signupPage = new SignUpPage();
+    ui->stackedWidget->addWidget(signupPage);
+    ui->stackedWidget->setCurrentWidget(signupPage);
 }
 
 void MainWindow::slotReadyRead() {
@@ -29,29 +56,8 @@ void MainWindow::slotReadyRead() {
     if (in.status() == QDataStream::Ok) {
         QString str;
         in >> str;
-        ui->textBrowser->append(str);
+        qDebug() << str;
     } else {
-        ui->textBrowser->append("read error...");
+        qDebug() << "read error...";
     }
 }
-
-void MainWindow::sendToServer(QString str) {
-    ui->lineEdit->clear();
-    data.clear();
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_4);
-    out << str;
-    socket->write(data);
-}
-
-void MainWindow::on_sendButton_clicked()
-{
-    sendToServer(ui->lineEdit->text());
-}
-
-
-void MainWindow::on_lineEdit_returnPressed()
-{
-    sendToServer(ui->lineEdit->text());
-}
-

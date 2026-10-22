@@ -24,12 +24,15 @@ private:
     Ui::MainWindow *ui;
     void sendToServer(QString str);
 
+    void showHelloPage();
+    void showLoginPage();
+    void showSignupPage();
+    void showHomePage();
+
+    void connectToServer();
+
 public slots:
     void slotReadyRead();
 
-private slots:
-    void on_connectButton_clicked();
-    void on_sendButton_clicked();
-    void on_lineEdit_returnPressed();
 };
 #endif // MAINWINDOW_H
