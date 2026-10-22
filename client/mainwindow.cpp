@@ -36,6 +36,7 @@ void MainWindow::slotReadyRead() {
 }
 
 void MainWindow::sendToServer(QString str) {
+    ui->lineEdit->clear();
     data.clear();
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_4);

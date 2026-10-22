@@ -18,5 +18,5 @@ public:
 
 public slots:
     void slotReadyRead();
-    void incommingConnection(qintptr socketDescriptor);
+    void incomingConnection(qintptr socketDescriptor);
 };

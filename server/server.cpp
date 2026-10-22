@@ -8,7 +8,7 @@ Server::Server() {
     }
 };
 
-void Server::incommingConnection(qintptr socketDescriptor) {
+void Server::incomingConnection(qintptr socketDescriptor) {
     socket = new QTcpSocket;
     socket->setSocketDescriptor(socketDescriptor);
     connect(socket, &QTcpSocket::readyRead, this, &Server::slotReadyRead);
