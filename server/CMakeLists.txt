@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(server LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network Sql)
 
 qt_standard_project_setup()
 
@@ -10,12 +10,20 @@ qt_add_executable(server
     main.cpp
     server.cpp
     server.h
+    db.h db.cpp
 )
 
 target_link_libraries(server
     PRIVATE
         Qt::Core
         Qt::Network
+        Qt::Sql
+)
+
+add_custom_command(TARGET server POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/data"
+        "$<TARGET_FILE_DIR:server>/data"
 )
 
 install(TARGETS server

@@ -19,7 +19,7 @@ void Server::incomingConnection(qintptr socketDescriptor) {
 }
 
 void Server::slotReadyRead() {
-    socket = (QTcpSocket*)sender();
+    socket = qobject_cast<QTcpSocket*>(sender());
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_6_4);
     if (in.status() == QDataStream::Ok) {
