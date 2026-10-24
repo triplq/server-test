@@ -11,6 +11,7 @@ qt_add_executable(server
     server.cpp
     server.h
     db.h db.cpp
+    user.h
 )
 
 target_link_libraries(server

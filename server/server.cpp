@@ -41,5 +41,4 @@ void Server::sendToClient(QString str) {
     for (auto& s : sockets) {
         s->write(data);
     }
-    // socket->write(data);
 }

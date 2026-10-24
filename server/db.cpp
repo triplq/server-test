@@ -3,6 +3,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QCoreApplication>
+#include <QSqlQuery>
 
 DB::DB(QObject* parent) : QObject(parent), connectionName("main_connection") {
 }
@@ -38,4 +39,57 @@ void DB::disconnectDB() {
     }
 
     QSqlDatabase::removeDatabase(connectionName);
+}
+
+std::optional<bool> DB::insert(const QString& username, const QString& email) {
+    QSqlDatabase db = QSqlDatabase::database(connectionName);
+    QSqlQuery q(db);
+    q.prepare("INSERT INTO users(username, email) VALUES(:username, :email)");
+    q.bindValue(":username", username);
+    q.bindValue(":email", email);
+
+    if (q.exec())
+        return true;
+
+    QSqlError error = q.lastError();
+    if (error.nativeErrorCode() == "19") {
+        return false;
+    }
+
+    qWarning() << "error with sql " << error.text();
+    return std::nullopt;
+}
+
+std::optional<bool> DB::exists(const QString& username, const QString& email) const {
+    QSqlDatabase db = QSqlDatabase::database(connectionName);
+    QSqlQuery q(db);
+    q.prepare("SELECT 1 FROM users WHERE username = :username AND email = :email LIMIT 1");
+    q.bindValue(":username", username);
+    q.bindValue(":email", email);
+    if (!q.exec()) {
+        qWarning() << "error with sql\n";
+        return std::nullopt;
+    }
+
+    return q.next();
+}
+
+std::optional<QVector<User>> DB::showUsers() const {
+    QVector<User> users;
+    QSqlDatabase db = QSqlDatabase::database(connectionName);
+    QSqlQuery q(db);
+    q.prepare("SELECT username, email FROM users");
+    if (q.exec()) {
+        while (q.next()) {
+            User user;
+            user.username = q.value("username").toString();
+            user.email = q.value("email").toString();
+            users.push_back(user);
+        }
+    } else {
+        qWarning() << "error with sql\n";
+        return std::nullopt;
+    }
+
+    return users;
 }
