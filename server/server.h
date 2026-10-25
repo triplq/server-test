@@ -17,6 +17,13 @@ private:
     void sendToClient(QTcpSocket* socket, const QByteArray& answer);
     void processRequest(QTcpSocket* socket, const QByteArray& data);
 
+    static QJsonObject ok(const QString& msg);
+    static QJsonObject fail(const QString& msg);
+
+    QJsonObject handleAddUser(const QJsonObject& json);
+    QJsonObject handleLoginUser(const QJsonObject& json);
+    QJsonObject handleGetUsers(const QJsonObject& json);
+
 public:
     Server(DB& n_database);
     QTcpSocket *socket;

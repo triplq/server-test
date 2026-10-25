@@ -1,6 +1,8 @@
 #include "server.h"
 #include <QtEndian>
 #include <QtCore>
+#include <QVector>
+#include "user.h"
 
 Server::Server(DB& n_database) : database(n_database) {
     if (this->listen(QHostAddress::Any, 2323)) {
@@ -48,6 +50,69 @@ void Server::slotReadyRead() {
     }
 }
 
+QJsonObject Server::ok(const QString& msg = {}) {
+    return { {"status", "success"}, {"message", msg}};
+}
+
+QJsonObject Server::fail(const QString& msg = {}) {
+    return { {"status", "failure"}, {"message", msg}};
+}
+
+QJsonObject Server::handleAddUser(const QJsonObject& json) {
+    QString username = json["username"].toString();
+    QString email = json["email"].toString();
+
+    if (username.isEmpty() || email.isEmpty()) {
+        return fail("Empty fields username email");
+    }
+
+    auto insert_result = database.insert(username, email);
+    if (!insert_result) {
+        return fail("Failed to execute sql");
+    } else if (*insert_result == true) {
+        return ok("User added successfully");
+    } else {
+        return fail("User does exists");
+    }
+}
+
+QJsonObject Server::handleLoginUser(const QJsonObject& json) {
+    QString username = json["username"].toString();
+    QString email = json["email"].toString();
+
+    if (username.isEmpty() || email.isEmpty()) {
+        return fail("Empty fields username email");
+    }
+
+    auto exists_result = database.insert(username, email);
+    if (!exists_result) {
+        return fail("Failed to execute sql");
+    } else if (*exists_result == true) {
+        return ok("User login successfully");
+    } else {
+        return fail("User does not exists");
+    }
+}
+
+QJsonObject Server::handleGetUsers(const QJsonObject& json) {
+    auto showUsers_result = database.showUsers();
+    if (showUsers_result) {
+        QJsonArray list;
+        QVector<User> userList = *showUsers_result;
+        for (const auto& u : userList) {
+            list.append(QJsonObject{
+                {"username", u.username},
+                {"email", u.email}
+            });
+        }
+        QJsonObject answer = ok();
+        answer["message"] = list;
+        return answer;
+    } else {
+        return fail("Error with sql");
+    }
+}
+
 void Server::processRequest(QTcpSocket* socket, const QByteArray& data) {
     const QJsonObject json = QJsonDocument::fromJson(data).object();
     const QString action = json["action"].toString();
@@ -55,22 +120,16 @@ void Server::processRequest(QTcpSocket* socket, const QByteArray& data) {
     QJsonObject answer;
 
     if (action == "add_user") {
-        QString username = json["username"].toString();
-        QString email = json["email"].toString();
-        if (!username.isEmpty() && !email.isEmpty()) {
-            auto insert_result = database.insert(username, email);
-            if (insert_result) {
-                answer["status"] = "success";
-                answer["message"] = "User added successfully";
-            } else {
-                answer["status"] = "failure";
-                answer["message"] = "Failed to execute sql query";
-            }
-        } else {
-            answer["status"] = "failure";
-            answer["message"] = "Empty fields username email";  //добавить вывод конктретики - тянуть из database->insert текст ошибки
-        }
+        answer = handleAddUser(json);
+    } else if (action == "login") {
+        answer = handleLoginUser(json);
+    } else if (action == "get_users") {
+        answer = handleGetUsers(json);
+    } else {
+
+        answer = fail("No action");
     }
+
     QByteArray bytes_answer = QJsonDocument(answer).toJson(QJsonDocument::Compact);
     sendToClient(socket, bytes_answer);
 }
