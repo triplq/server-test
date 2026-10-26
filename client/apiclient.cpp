@@ -55,6 +55,13 @@ void ApiClient::formInsertRequest(const QString& username, const QString& email)
     sendToServer(answer, ApiClient::requestType::insertUser);
 }
 
+void ApiClient::formGetRequest() {
+    QJsonObject answer;
+    answer["action"] = "get_users";
+
+    sendToServer(answer, ApiClient::requestType::getUsers);
+}
+
 void ApiClient::sendToServer(QJsonObject& request, const requestType& type) {
     QByteArray data;
     int id = nextId++;
@@ -64,6 +71,15 @@ void ApiClient::sendToServer(QJsonObject& request, const requestType& type) {
     out.setVersion(QDataStream::Qt_6_4);
     out << request;
     socket->write(data);
+}
+
+QVector<User> ApiClient::JSONparsing(const QJsonArray& array){
+    QVector<User> users;
+    for (const QJsonValue& a : array) {
+        users.push_back(User::fromJson(a.toObject()));
+    }
+
+    return users;
 }
 
 void ApiClient::processAnswer(const QByteArray& data) {
@@ -85,7 +101,8 @@ void ApiClient::processAnswer(const QByteArray& data) {
         emit userInsert(json["message"].toString());
         break;
     case requestType::getUsers:
-        emit usersGet(json["message"].toString());
+        QVector<User> users = JSONparsing(json["message"].toArray());
+        emit usersGet(users);
         break;
     }
 }

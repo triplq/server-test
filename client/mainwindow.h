@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include "apiclient.h"
+#include "userpage.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,11 +25,14 @@ private:
     Ui::MainWindow *ui;
     ApiClient api;
 
+    UserPage* userPage;
+
     void showHelloPage();
     void showLoginPage();
     void showSignupPage();
     void showHomePage();
     void showUserPage(const QString& msg);
+    void showUsers(const QVector<User>& array);
 
 };
 #endif // MAINWINDOW_H

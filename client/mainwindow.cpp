@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
     api.connectToServer();
     showHelloPage();
 }
@@ -60,7 +59,18 @@ void MainWindow::showSignupPage() {
 }
 
 void MainWindow::showUserPage(const QString& msg) {
-    UserPage *userPage = new UserPage();
+    userPage = new UserPage();
     ui->stackedWidget->addWidget(userPage);
     ui->stackedWidget->setCurrentWidget(userPage);
+
+    connect(userPage, &UserPage::getClicked, &api, &ApiClient::formGetRequest);
+
+    connect(&api, &ApiClient::usersGet, this, &MainWindow::showUsers);
+    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
+        QMessageBox::warning(this, "Error", msg);
+    });
+}
+
+void MainWindow::showUsers(const QVector<User>& array) {
+    userPage->setUsers(array);
 }

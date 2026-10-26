@@ -16,6 +16,9 @@ qt_add_executable(client
     loginpage.h loginpage.cpp loginpage.ui
     apiclient.h apiclient.cpp
     userpage.h userpage.cpp userpage.ui
+    user.h
+    usermodel.h
+
 
 )
 

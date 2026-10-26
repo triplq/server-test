@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QVector>
+#include "user.h"
 
 class ApiClient : public QObject
 {
@@ -21,18 +23,20 @@ private:
     void sendToServer(QJsonObject& request, const requestType& type);
 
     void processAnswer(const QByteArray& data);
+    QVector<User> JSONparsing(const QJsonArray& array);
 
 public slots:
     void slotReadyRead();
 
     void formInsertRequest(const QString& username, const QString& email);
     void formExistsRequest(const QString& username, const QString& email);
+    void formGetRequest();
 
 signals:
     void requestFail(const QString& msg);
     void userExists(const QString& msg);
     void userInsert(const QString& msg);
-    void usersGet(const QString& msg);
+    void usersGet(const QVector<User>& array);
 };
 
 #endif // APICLIENT_H
