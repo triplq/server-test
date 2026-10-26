@@ -15,6 +15,10 @@ public:
     explicit LogInPage(QWidget *parent = nullptr);
     ~LogInPage();
 
+signals:
+    void backClicked();
+    void okPressed(const QString& username, const QString& email);
+
 private:
     Ui::LogInPage *ui;
 };

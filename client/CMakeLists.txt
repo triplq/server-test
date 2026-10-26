@@ -14,6 +14,8 @@ qt_add_executable(client
     hellopage.h hellopage.cpp hellopage.ui
     signuppage.h signuppage.cpp signuppage.ui
     loginpage.h loginpage.cpp loginpage.ui
+    apiclient.h apiclient.cpp
+    userpage.h userpage.cpp userpage.ui
 
 )
 

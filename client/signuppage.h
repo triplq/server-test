@@ -15,6 +15,10 @@ public:
     explicit SignUpPage(QWidget *parent = nullptr);
     ~SignUpPage();
 
+signals:
+    void backClicked();
+    void okPressed(const QString& username, const QString& email);
+
 private:
     Ui::SignUpPage *ui;
 };

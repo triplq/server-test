@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QTcpSocket>
+#include <QJsonObject>
+#include "apiclient.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,23 +18,17 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() override;
+    ~MainWindow() override;    
 
 private:
-    QTcpSocket *socket;
-    QByteArray data;
     Ui::MainWindow *ui;
-    void sendToServer(QString str);
+    ApiClient api;
 
     void showHelloPage();
     void showLoginPage();
     void showSignupPage();
     void showHomePage();
-
-    void connectToServer();
-
-public slots:
-    void slotReadyRead();
+    void showUserPage(const QString& msg);
 
 };
 #endif // MAINWINDOW_H

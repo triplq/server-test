@@ -50,52 +50,55 @@ void Server::slotReadyRead() {
     }
 }
 
-QJsonObject Server::ok(const QString& msg = {}) {
-    return { {"status", "success"}, {"message", msg}};
+QJsonObject Server::ok(int id, const QString& msg = {}) {
+    return { {"status", "success"}, {"message", msg}, {"id", id}};
 }
 
-QJsonObject Server::fail(const QString& msg = {}) {
-    return { {"status", "failure"}, {"message", msg}};
+QJsonObject Server::fail(int id, const QString& msg = {}) {
+    return { {"status", "failure"}, {"message", msg}, {"id", id}};
 }
 
 QJsonObject Server::handleAddUser(const QJsonObject& json) {
     QString username = json["username"].toString();
     QString email = json["email"].toString();
+    int id = json["id"].toInt();
 
     if (username.isEmpty() || email.isEmpty()) {
-        return fail("Empty fields username email");
+        return fail(id ,"Empty fields username email");
     }
 
     auto insert_result = database.insert(username, email);
     if (!insert_result) {
-        return fail("Failed to execute sql");
+        return fail(id, "Failed to execute sql");
     } else if (*insert_result == true) {
-        return ok("User added successfully");
+        return ok(id, "User added successfully");
     } else {
-        return fail("User does exists");
+        return fail(id, "User does exists");
     }
 }
 
 QJsonObject Server::handleLoginUser(const QJsonObject& json) {
     QString username = json["username"].toString();
     QString email = json["email"].toString();
+    int id = json["id"].toInt();
 
     if (username.isEmpty() || email.isEmpty()) {
-        return fail("Empty fields username email");
+        return fail(id, "Empty fields username email");
     }
 
-    auto exists_result = database.insert(username, email);
+    auto exists_result = database.exists(username, email);
     if (!exists_result) {
-        return fail("Failed to execute sql");
+        return fail(id, "Failed to execute sql");
     } else if (*exists_result == true) {
-        return ok("User login successfully");
+        return ok(id, "User login successfully");
     } else {
-        return fail("User does not exists");
+        return fail(id, "User does not exists");
     }
 }
 
 QJsonObject Server::handleGetUsers(const QJsonObject& json) {
     auto showUsers_result = database.showUsers();
+    int id = json["id"].toInt();
     if (showUsers_result) {
         QJsonArray list;
         QVector<User> userList = *showUsers_result;
@@ -105,29 +108,30 @@ QJsonObject Server::handleGetUsers(const QJsonObject& json) {
                 {"email", u.email}
             });
         }
-        QJsonObject answer = ok();
+        QJsonObject answer = ok(id);
         answer["message"] = list;
         return answer;
     } else {
-        return fail("Error with sql");
+        return fail(id, "Error with sql");
     }
 }
 
 void Server::processRequest(QTcpSocket* socket, const QByteArray& data) {
     const QJsonObject json = QJsonDocument::fromJson(data).object();
     const QString action = json["action"].toString();
+    int id = json["id"].toInt();
 
     QJsonObject answer;
 
     if (action == "add_user") {
         answer = handleAddUser(json);
-    } else if (action == "login") {
+    } else if (action == "login_user") {
         answer = handleLoginUser(json);
     } else if (action == "get_users") {
         answer = handleGetUsers(json);
     } else {
 
-        answer = fail("No action");
+        answer = fail(id, "No action");
     }
 
     QByteArray bytes_answer = QJsonDocument(answer).toJson(QJsonDocument::Compact);

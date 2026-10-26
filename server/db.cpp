@@ -67,7 +67,7 @@ std::optional<bool> DB::exists(const QString& username, const QString& email) co
     q.bindValue(":username", username);
     q.bindValue(":email", email);
     if (!q.exec()) {
-        qWarning() << "error with sql\n";
+        qWarning() << "error with sql " << q.lastError().text();
         return std::nullopt;
     }
 
@@ -87,7 +87,7 @@ std::optional<QVector<User>> DB::showUsers() const {
             users.push_back(user);
         }
     } else {
-        qWarning() << "error with sql\n";
+        qWarning() << "error with sql " << q.lastError().text();
         return std::nullopt;
     }
 
