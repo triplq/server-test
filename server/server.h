@@ -2,6 +2,7 @@
 
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QJsonObject>
 #include "db.h"
 
 class Server : public QTcpServer {
@@ -20,6 +21,8 @@ private:
     QJsonObject handleAddUser(DB& db, const QJsonObject& json);
     QJsonObject handleLoginUser(DB& db, const QJsonObject& json);
     QJsonObject handleGetUsers(DB& db, const QJsonObject& json);
+
+    bool isEmail(const QString& email) const;
 
 public:
     Server();

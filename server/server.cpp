@@ -5,6 +5,8 @@
 #include <QThreadPool>
 #include <QPointer>
 #include <QUuid>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 #include "user.h"
 
 Server::Server() {
@@ -74,6 +76,10 @@ QJsonObject Server::handleAddUser(DB& db, const QJsonObject& json) {
         return fail(id ,"Empty fields username email");
     }
 
+    if (!isEmail(email)) {
+        return fail(id, "Wrong email");
+    }
+
     auto insert_result = db.insert(username, email);
     if (!insert_result) {
         return fail(id, "Failed to execute sql");
@@ -91,6 +97,10 @@ QJsonObject Server::handleLoginUser(DB& db, const QJsonObject& json) {
 
     if (username.isEmpty() || email.isEmpty()) {
         return fail(id, "Empty fields username email");
+    }
+
+    if (!isEmail(email)) {
+        return fail(id, "Wrong email");
     }
 
     auto exists_result = db.exists(username, email);
@@ -133,6 +143,8 @@ QByteArray Server::buildReply(QTcpSocket* socket, const QByteArray& data) {
     if (!database.connectToDB()) {
         qCritical() << "error to connect\n";
         answer = fail(id, "Failed to connect to db");
+        QByteArray bytes_answer = QJsonDocument(answer).toJson(QJsonDocument::Compact);
+        return bytes_answer;
     }
 
     if (action == "add_user") {
@@ -170,4 +182,13 @@ void Server::sendToClient(QTcpSocket* socket, const QByteArray& answer) {
     out.setVersion(QDataStream::Qt_6_4);
     out << answer;
     socket->write(data);
+}
+
+bool Server::isEmail(const QString& email) const {
+    static const QRegularExpression emailRegex(
+        R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,64}$)"
+        );
+    QRegularExpressionMatch match = emailRegex.match(email);
+
+    return match.hasMatch();
 }

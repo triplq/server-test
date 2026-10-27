@@ -1,5 +1,6 @@
 #include "userpage.h"
 #include "ui_userpage.h"
+#include <QHeaderView>
 
 UserPage::UserPage(QWidget *parent)
     : QWidget(parent)

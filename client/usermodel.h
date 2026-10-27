@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QVector>
+#include <QVariant>
 #include "user.h"
 
 class UserModel : public QAbstractTableModel {

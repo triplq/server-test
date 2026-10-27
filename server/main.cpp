@@ -2,6 +2,7 @@
 #include "db.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +17,10 @@ int main(int argc, char *argv[])
     }
 
     Server server;
+    if (!server.isListening()) {
+        qCritical() << "server is not listening\n";
+        return 1;
+    }
 
     return a.exec();
 }

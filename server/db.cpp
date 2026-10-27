@@ -1,9 +1,10 @@
 #include "db.h"
-#include <QFileInfo>
+#include <QFile>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QCoreApplication>
 #include <QSqlQuery>
+#include <QDebug>
 
 DB::DB(const QString& connName, QObject* parent) : connectionName(connName), QObject(parent) {
 }
@@ -17,6 +18,7 @@ bool DB::connectToDB() {
         return true;
     }
     const QString path = QCoreApplication::applicationDirPath() + "/data/app.db";
+
     if (!QFile::exists(path)) {
         qCritical() << "db does not exists\n";
         return false;

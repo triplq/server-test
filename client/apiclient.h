@@ -5,6 +5,9 @@
 #include <QTcpSocket>
 #include <QVector>
 #include <QTimer>
+#include <QJsonObject>
+#include <QHash>
+#include <QJsonArray>
 #include "user.h"
 
 class ApiClient : public QObject
