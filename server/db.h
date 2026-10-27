@@ -11,7 +11,7 @@ class DB : public QObject
     Q_OBJECT
 
 public:
-    DB(QObject *parent = nullptr);
+    DB(const QString& connName, QObject *parent = nullptr);
 
     bool connectToDB();
     std::optional<bool> insert(const QString& username, const QString& email);

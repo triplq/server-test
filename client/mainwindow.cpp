@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    api = new ApiClient;
+    api->moveToThread(&netThread);
 
     helloPage = new HelloPage(this);
     ui->stackedWidget->addWidget(helloPage);
@@ -18,34 +20,40 @@ MainWindow::MainWindow(QWidget *parent)
     loginPage = new LogInPage(this);
     ui->stackedWidget->addWidget(loginPage);
     connect(loginPage, &LogInPage::backClicked, this, &MainWindow::showHelloPage);
-    connect(loginPage, &LogInPage::okPressed, &api, &ApiClient::formExistsRequest);
-    connect(&api, &ApiClient::userExists, this, &MainWindow::showUserPage);
+    connect(loginPage, &LogInPage::okPressed, api, &ApiClient::formExistsRequest);
+    connect(api, &ApiClient::userExists, this, &MainWindow::showUserPage);
 
 
     signupPage = new SignUpPage(this);
     ui->stackedWidget->addWidget(signupPage);
     connect(signupPage, &SignUpPage::backClicked, this, &MainWindow::showHelloPage);
-    connect(signupPage, &SignUpPage::okPressed, &api, &ApiClient::formInsertRequest);
-    connect(&api, &ApiClient::userInsert, this, &MainWindow::showUserPage);
+    connect(signupPage, &SignUpPage::okPressed, api, &ApiClient::formInsertRequest);
+    connect(api, &ApiClient::userInsert, this, &MainWindow::showUserPage);
 
 
     userPage = new UserPage(this);
     ui->stackedWidget->addWidget(userPage);
-    connect(userPage, &UserPage::getClicked, &api, &ApiClient::formGetRequest);
-    connect(&api, &ApiClient::usersGet, this, [this](const QVector<User>& array){
+    connect(userPage, &UserPage::getClicked, api, &ApiClient::formGetRequest);
+    connect(api, &ApiClient::usersGet, this, [this](const QVector<User>& array){
         userPage->setUsers(array);
     });
 
-    api.connectToServer();
+    connect(&netThread, &QThread::started, api, &ApiClient::connectToServer);
+    connect(&netThread, &QThread::finished, api, &QObject::deleteLater);
+
     showHelloPage();
 
-    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
+    connect(api, &ApiClient::requestFail, this, [this](const QString& msg){
         QMessageBox::warning(this, "Error", msg);
     });
+
+    netThread.start();
 }
 
 MainWindow::~MainWindow()
 {
+    netThread.quit();
+    netThread.wait();
     delete ui;
 }
 

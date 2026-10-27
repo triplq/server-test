@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTcpSocket>
 #include <QJsonObject>
+#include <QThread>
 #include "apiclient.h"
 #include "hellopage.h"
 #include "loginpage.h"
@@ -26,7 +27,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    ApiClient api;
+    ApiClient* api;
+    QThread netThread;
 
     UserPage* userPage;
     LogInPage* loginPage;

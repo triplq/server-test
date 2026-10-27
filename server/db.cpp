@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 #include <QSqlQuery>
 
-DB::DB(QObject* parent) : QObject(parent), connectionName("main_connection") {
+DB::DB(const QString& connName, QObject* parent) : connectionName(connName), QObject(parent) {
 }
 
 DB::~DB() {

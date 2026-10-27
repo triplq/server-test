@@ -7,16 +7,15 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    DB database;
-
-    if(!database.connectToDB()){
+    DB check("startup");
+    if(!check.connectToDB()){
         qCritical() << "error to connect db\n";
         return 1;
     } else {
         qDebug() << "db connected succes\n";
     }
 
-    Server server(database);
+    Server server;
 
     return a.exec();
 }

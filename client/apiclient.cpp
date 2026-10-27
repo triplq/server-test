@@ -2,10 +2,11 @@
 #include <QtCore>
 
 ApiClient::ApiClient() {
-    reconnectTimer.setSingleShot(true);
-    reconnectTimer.setInterval(reconnectMs);
+    reconnectTimer = new QTimer(this);
+    reconnectTimer->setSingleShot(true);
+    reconnectTimer->setInterval(reconnectMs);
 
-    connect(&reconnectTimer, &QTimer::timeout, this, &ApiClient::tryConnect);
+    connect(reconnectTimer, &QTimer::timeout, this, &ApiClient::tryConnect);
 }
 
 void ApiClient::connectToServer() {
@@ -26,15 +27,15 @@ void ApiClient::connectToServer() {
             });
 
     connect(socket, &QTcpSocket::connected, this, [this] {
-        reconnectTimer.stop();
+        reconnectTimer->stop();
     });
 
     socket->connectToHost("127.0.0.1", 2323);
 }
 
 void ApiClient::reconnect() {
-    if (!reconnectTimer.isActive())
-        reconnectTimer.start();
+    if (!reconnectTimer->isActive())
+        reconnectTimer->start();
 }
 
 void ApiClient::tryConnect() {

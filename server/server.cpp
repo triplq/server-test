@@ -2,15 +2,23 @@
 #include <QtEndian>
 #include <QtCore>
 #include <QVector>
+#include <QThreadPool>
+#include <QPointer>
+#include <QUuid>
 #include "user.h"
 
-Server::Server(DB& n_database) : database(n_database) {
+Server::Server() {
+    QThreadPool::globalInstance()->setMaxThreadCount(64);
     if (this->listen(QHostAddress::Any, 2323)) {
         qDebug() << "Server listens\n";
     } else {
         qDebug() << "Server is not listening\n";
     }
 };
+
+Server::~Server() {
+    QThreadPool::globalInstance()->waitForDone();
+}
 
 void Server::incomingConnection(qintptr socketDescriptor) {
     QTcpSocket* socket = new QTcpSocket(this);
@@ -45,7 +53,7 @@ void Server::slotReadyRead() {
         if (!in.commitTransaction())
             return;
 
-        processRequest(socket, data);
+        buildReply(socket, data);
     }
 }
 
@@ -57,7 +65,7 @@ QJsonObject Server::fail(int id, const QString& msg) {
     return { {"status", "failure"}, {"message", msg}, {"id", id}};
 }
 
-QJsonObject Server::handleAddUser(const QJsonObject& json) {
+QJsonObject Server::handleAddUser(DB& db, const QJsonObject& json) {
     QString username = json["username"].toString();
     QString email = json["email"].toString();
     int id = json["id"].toInt();
@@ -66,7 +74,7 @@ QJsonObject Server::handleAddUser(const QJsonObject& json) {
         return fail(id ,"Empty fields username email");
     }
 
-    auto insert_result = database.insert(username, email);
+    auto insert_result = db.insert(username, email);
     if (!insert_result) {
         return fail(id, "Failed to execute sql");
     } else if (*insert_result == true) {
@@ -76,7 +84,7 @@ QJsonObject Server::handleAddUser(const QJsonObject& json) {
     }
 }
 
-QJsonObject Server::handleLoginUser(const QJsonObject& json) {
+QJsonObject Server::handleLoginUser(DB& db, const QJsonObject& json) {
     QString username = json["username"].toString();
     QString email = json["email"].toString();
     int id = json["id"].toInt();
@@ -85,7 +93,7 @@ QJsonObject Server::handleLoginUser(const QJsonObject& json) {
         return fail(id, "Empty fields username email");
     }
 
-    auto exists_result = database.exists(username, email);
+    auto exists_result = db.exists(username, email);
     if (!exists_result) {
         return fail(id, "Failed to execute sql");
     } else if (*exists_result == true) {
@@ -95,8 +103,8 @@ QJsonObject Server::handleLoginUser(const QJsonObject& json) {
     }
 }
 
-QJsonObject Server::handleGetUsers(const QJsonObject& json) {
-    auto showUsers_result = database.showUsers();
+QJsonObject Server::handleGetUsers(DB& db, const QJsonObject& json) {
+    auto showUsers_result = db.showUsers();
     int id = json["id"].toInt();
     if (showUsers_result) {
         QJsonArray list;
@@ -115,29 +123,44 @@ QJsonObject Server::handleGetUsers(const QJsonObject& json) {
     }
 }
 
-void Server::processRequest(QTcpSocket* socket, const QByteArray& data) {
+QByteArray Server::buildReply(QTcpSocket* socket, const QByteArray& data) {
     const QJsonObject json = QJsonDocument::fromJson(data).object();
     const QString action = json["action"].toString();
     int id = json["id"].toInt();
 
     QJsonObject answer;
+    DB database(QUuid::createUuid().toString());
 
     if (action == "add_user") {
-        answer = handleAddUser(json);
+        answer = handleAddUser(database, json);
     } else if (action == "login_user") {
-        answer = handleLoginUser(json);
+        answer = handleLoginUser(database, json);
     } else if (action == "get_users") {
-        answer = handleGetUsers(json);
+        answer = handleGetUsers(database, json);
     } else {
-
         answer = fail(id, "No action");
     }
 
     QByteArray bytes_answer = QJsonDocument(answer).toJson(QJsonDocument::Compact);
-    sendToClient(socket, bytes_answer);
+    return bytes_answer;
+}
+
+void Server::processRequest(QTcpSocket* socket, const QByteArray& data) {
+    QPointer<QTcpSocket> guard(socket);
+    QThreadPool::globalInstance()->start([this, guard, data]{
+        QByteArray reply = buildReply(guard, data);
+        QMetaObject::invokeMethod(this, [this, guard, reply]{
+            if (guard) {
+                sendToClient(guard, reply);
+            }
+        }, Qt::QueuedConnection);
+    });
 }
 
 void Server::sendToClient(QTcpSocket* socket, const QByteArray& answer) {
+    if (!socket || socket->state() != QAbstractSocket::ConnectedState)
+        return;
+
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_4);

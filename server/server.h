@@ -8,22 +8,22 @@ class Server : public QTcpServer {
     Q_OBJECT
 
 private:
-    DB& database;
-
     constexpr static quint32 kMaxFrame = 10 * 1024 * 1024;
 
     void sendToClient(QTcpSocket* socket, const QByteArray& answer);
+    QByteArray buildReply(QTcpSocket* socket, const QByteArray& data);
     void processRequest(QTcpSocket* socket, const QByteArray& data);
 
     static QJsonObject ok(int id, const QString& msg = {});
     static QJsonObject fail(int id, const QString& msg = {});
 
-    QJsonObject handleAddUser(const QJsonObject& json);
-    QJsonObject handleLoginUser(const QJsonObject& json);
-    QJsonObject handleGetUsers(const QJsonObject& json);
+    QJsonObject handleAddUser(DB& db, const QJsonObject& json);
+    QJsonObject handleLoginUser(DB& db, const QJsonObject& json);
+    QJsonObject handleGetUsers(DB& db, const QJsonObject& json);
 
 public:
-    Server(DB& n_database);
+    Server();
+    ~Server();
 
 public slots:
     void slotReadyRead();

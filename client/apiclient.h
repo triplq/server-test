@@ -26,7 +26,7 @@ private:
     void processAnswer(const QByteArray& data);
     QVector<User> JSONparsing(const QJsonArray& array);
 
-    QTimer reconnectTimer;
+    QTimer* reconnectTimer = nullptr;
     const static int reconnectMs = 3000;
     void reconnect();
 
