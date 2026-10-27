@@ -6,14 +6,15 @@ ApiClient::ApiClient() {}
 void ApiClient::connectToServer() {
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &ApiClient::slotReadyRead);
-    connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
+    connect(socket, &QTcpSocket::disconnected, this, [this]{
+        pending.clear();
+        emit requestFail("Connection to server lost");
+    });
 
     socket->connectToHost("127.0.0.1", 2323);
 }
 
 void ApiClient::slotReadyRead() {
-    QDataStream in(socket);
-
     while(socket->bytesAvailable() >= 4) {
         char raw_len[4];
         socket->peek(raw_len, 4);
@@ -42,7 +43,6 @@ void ApiClient::formExistsRequest(const QString& username, const QString& email)
     answer["username"] = username;
     answer["email"] = email;
 
-    QByteArray request = QJsonDocument(answer).toJson(QJsonDocument::Compact);
     sendToServer(answer, ApiClient::requestType::existsUser);
 }
 
@@ -63,13 +63,18 @@ void ApiClient::formGetRequest() {
 }
 
 void ApiClient::sendToServer(QJsonObject& request, const requestType& type) {
+    if (!socket || socket->state() != QAbstractSocket::ConnectedState) {
+        emit requestFail("No connection to server");
+        return;
+    }
+
     QByteArray data;
     int id = nextId++;
     pending.insert(id, type);
     request["id"] = id;
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_4);
-    out << request;
+    out << QJsonDocument(request).toJson(QJsonDocument::Compact);
     socket->write(data);
 }
 

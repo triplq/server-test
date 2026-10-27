@@ -13,17 +13,16 @@ Server::Server(DB& n_database) : database(n_database) {
 };
 
 void Server::incomingConnection(qintptr socketDescriptor) {
-    socket = new QTcpSocket;
+    QTcpSocket* socket = new QTcpSocket(this);
     socket->setSocketDescriptor(socketDescriptor);
     connect(socket, &QTcpSocket::readyRead, this, &Server::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 
-    sockets.push_back(socket);
     qDebug() << "connect" << socketDescriptor << '\n';
 }
 
 void Server::slotReadyRead() {
-    socket = qobject_cast<QTcpSocket*>(sender());
+    QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
 
     if (!socket)
         return;
@@ -50,11 +49,11 @@ void Server::slotReadyRead() {
     }
 }
 
-QJsonObject Server::ok(int id, const QString& msg = {}) {
+QJsonObject Server::ok(int id, const QString& msg) {
     return { {"status", "success"}, {"message", msg}, {"id", id}};
 }
 
-QJsonObject Server::fail(int id, const QString& msg = {}) {
+QJsonObject Server::fail(int id, const QString& msg) {
     return { {"status", "failure"}, {"message", msg}, {"id", id}};
 }
 

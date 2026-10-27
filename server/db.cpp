@@ -28,6 +28,7 @@ bool DB::connectToDB() {
         qCritical() << "error open db: " << db.lastError().text();
         return false;
     }
+
     return true;
 }
 
@@ -53,7 +54,8 @@ std::optional<bool> DB::insert(const QString& username, const QString& email) {
 
     QSqlError error = q.lastError();
     if (error.nativeErrorCode() == "19") {
-        return false;
+        if (error.text().contains("UNIQUE constraint failed"))
+            return false;
     }
 
     qWarning() << "error with sql " << error.text();

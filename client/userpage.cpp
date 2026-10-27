@@ -6,7 +6,6 @@ UserPage::UserPage(QWidget *parent)
     , ui(new Ui::UserPage)
 {
     ui->setupUi(this);
-    setupTable();
     connect(ui->getButton, &QPushButton::clicked, this, &UserPage::getClicked);
 }
 
@@ -22,7 +21,6 @@ void UserPage::setUsers(const QVector<User>& array) {
 void UserPage::setupTable()
 {
     ui->tableView->setModel(&model);
-    ui->tableView->setSortingEnabled(true);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setAlternatingRowColors(true);
