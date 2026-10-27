@@ -14,13 +14,13 @@ class UserPage : public QWidget
 
 private:
     UserModel model;
+    void setupTable();
 
 public:
     explicit UserPage(QWidget *parent = nullptr);
     ~UserPage();
 
     void setUsers(const QVector<User>& array);
-    void setupTable();
 
 signals:
     void getClicked();

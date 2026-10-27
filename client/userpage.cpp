@@ -6,6 +6,7 @@ UserPage::UserPage(QWidget *parent)
     , ui(new Ui::UserPage)
 {
     ui->setupUi(this);
+    setupTable();
     connect(ui->getButton, &QPushButton::clicked, this, &UserPage::getClicked);
 }
 

@@ -20,18 +20,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(loginPage, &LogInPage::backClicked, this, &MainWindow::showHelloPage);
     connect(loginPage, &LogInPage::okPressed, &api, &ApiClient::formExistsRequest);
     connect(&api, &ApiClient::userExists, this, &MainWindow::showUserPage);
-    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
-        QMessageBox::warning(this, "Error", msg);
-    });
+
 
     signupPage = new SignUpPage(this);
     ui->stackedWidget->addWidget(signupPage);
     connect(signupPage, &SignUpPage::backClicked, this, &MainWindow::showHelloPage);
     connect(signupPage, &SignUpPage::okPressed, &api, &ApiClient::formInsertRequest);
     connect(&api, &ApiClient::userInsert, this, &MainWindow::showUserPage);
-    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
-        QMessageBox::warning(this, "Error", msg);
-    });
+
 
     userPage = new UserPage(this);
     ui->stackedWidget->addWidget(userPage);
@@ -39,12 +35,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&api, &ApiClient::usersGet, this, [this](const QVector<User>& array){
         userPage->setUsers(array);
     });
-    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
-        QMessageBox::warning(this, "Error", msg);
-    });
 
     api.connectToServer();
     showHelloPage();
+
+    connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
+        QMessageBox::warning(this, "Error", msg);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -67,5 +64,4 @@ void MainWindow::showSignupPage() {
 void MainWindow::showUserPage(const QString& msg) {
     ui->stackedWidget->setCurrentWidget(userPage);
     ui->statusbar->showMessage(msg, 3000);
-    userPage->setupTable();
 }

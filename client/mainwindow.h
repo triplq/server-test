@@ -36,7 +36,6 @@ private:
     void showHelloPage();
     void showLoginPage();
     void showSignupPage();
-    void showHomePage();
     void showUserPage(const QString& msg);
 
 };

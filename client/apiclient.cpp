@@ -1,17 +1,52 @@
 #include "apiclient.h"
 #include <QtCore>
 
-ApiClient::ApiClient() {}
+ApiClient::ApiClient() {
+    reconnectTimer.setSingleShot(true);
+    reconnectTimer.setInterval(reconnectMs);
+
+    connect(&reconnectTimer, &QTimer::timeout, this, &ApiClient::tryConnect);
+}
 
 void ApiClient::connectToServer() {
+    if (socket)
+        return;
+
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &ApiClient::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, this, [this]{
         pending.clear();
         emit requestFail("Connection to server lost");
+        reconnect();
+    });
+    connect(socket, &QTcpSocket::errorOccurred, this,
+            [this](QAbstractSocket::SocketError) {
+                qWarning().noquote() << "Socket error:" << socket->errorString();
+                reconnect();
+            });
+
+    connect(socket, &QTcpSocket::connected, this, [this] {
+        reconnectTimer.stop();
     });
 
     socket->connectToHost("127.0.0.1", 2323);
+}
+
+void ApiClient::reconnect() {
+    if (!reconnectTimer.isActive())
+        reconnectTimer.start();
+}
+
+void ApiClient::tryConnect() {
+    switch (socket->state()) {
+    case QAbstractSocket::UnconnectedState:
+        socket->connectToHost("127.0.0.1", 2323);
+        break;
+    case QAbstractSocket::ConnectedState:
+        break;
+    default:
+        reconnect();
+    }
 }
 
 void ApiClient::slotReadyRead() {

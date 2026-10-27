@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QVector>
+#include <QTimer>
 #include "user.h"
 
 class ApiClient : public QObject
@@ -15,7 +16,7 @@ public:
 
 private:
     int nextId = 1;
-    QTcpSocket *socket;
+    QTcpSocket *socket = nullptr;
     constexpr static quint32 kMaxFrame = 10 * 1024 * 1024;
     enum class requestType {insertUser, existsUser, getUsers};
     QHash<int, requestType> pending;
@@ -25,12 +26,18 @@ private:
     void processAnswer(const QByteArray& data);
     QVector<User> JSONparsing(const QJsonArray& array);
 
+    QTimer reconnectTimer;
+    const static int reconnectMs = 3000;
+    void reconnect();
+
 public slots:
     void slotReadyRead();
 
     void formInsertRequest(const QString& username, const QString& email);
     void formExistsRequest(const QString& username, const QString& email);
     void formGetRequest();
+
+    void tryConnect();
 
 signals:
     void requestFail(const QString& msg);
