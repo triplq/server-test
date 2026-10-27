@@ -53,7 +53,7 @@ void Server::slotReadyRead() {
         if (!in.commitTransaction())
             return;
 
-        buildReply(socket, data);
+        processRequest(socket, data);
     }
 }
 
@@ -130,6 +130,10 @@ QByteArray Server::buildReply(QTcpSocket* socket, const QByteArray& data) {
 
     QJsonObject answer;
     DB database(QUuid::createUuid().toString());
+    if (!database.connectToDB()) {
+        qCritical() << "error to connect\n";
+        answer = fail(id, "Failed to connect to db");
+    }
 
     if (action == "add_user") {
         answer = handleAddUser(database, json);
