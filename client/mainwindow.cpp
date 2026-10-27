@@ -1,10 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "hellopage.h"
-#include "loginpage.h"
-#include "signuppage.h"
-#include "userpage.h"
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -22,7 +18,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::showHelloPage() {
-    HelloPage *helloPage = new HelloPage();
+    helloPage = new HelloPage(this);
     ui->stackedWidget->addWidget(helloPage);
     ui->stackedWidget->setCurrentWidget(helloPage);
 
@@ -31,7 +27,7 @@ void MainWindow::showHelloPage() {
 }
 
 void MainWindow::showLoginPage() {
-    LogInPage *loginPage = new LogInPage();
+    loginPage = new LogInPage(this);
     ui->stackedWidget->addWidget(loginPage);
     ui->stackedWidget->setCurrentWidget(loginPage);
 
@@ -45,7 +41,7 @@ void MainWindow::showLoginPage() {
 }
 
 void MainWindow::showSignupPage() {
-    SignUpPage *signupPage = new SignUpPage();
+    signupPage = new SignUpPage(this);
     ui->stackedWidget->addWidget(signupPage);
     ui->stackedWidget->setCurrentWidget(signupPage);
 
@@ -59,18 +55,16 @@ void MainWindow::showSignupPage() {
 }
 
 void MainWindow::showUserPage(const QString& msg) {
-    userPage = new UserPage();
+    userPage = new UserPage(this);
     ui->stackedWidget->addWidget(userPage);
     ui->stackedWidget->setCurrentWidget(userPage);
 
     connect(userPage, &UserPage::getClicked, &api, &ApiClient::formGetRequest);
 
-    connect(&api, &ApiClient::usersGet, this, &MainWindow::showUsers);
+    connect(&api, &ApiClient::usersGet, this, [this](const QVector<User>& array){
+        userPage->setUsers(array);
+    });
     connect(&api, &ApiClient::requestFail, this, [this](const QString& msg){
         QMessageBox::warning(this, "Error", msg);
     });
-}
-
-void MainWindow::showUsers(const QVector<User>& array) {
-    userPage->setUsers(array);
 }

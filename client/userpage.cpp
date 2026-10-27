@@ -21,8 +21,7 @@ void UserPage::setUsers(const QVector<User>& array) {
 
 void UserPage::setupTable()
 {
-    proxy.setSourceModel(&model);
-    ui->tableView->setModel(&proxy);
+    ui->tableView->setModel(&model);
     ui->tableView->setSortingEnabled(true);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -32,5 +31,4 @@ void UserPage::setupTable()
     auto *h = ui->tableView->horizontalHeader();
     h->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     h->setSectionResizeMode(1, QHeaderView::Stretch);
-    h->setSectionResizeMode(2, QHeaderView::Stretch);
 }

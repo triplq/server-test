@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include "usermodel.h"
-#include <QSortFilterProxyModel>
 
 namespace Ui {
 class UserPage;
@@ -15,7 +14,6 @@ class UserPage : public QWidget
 
 private:
     UserModel model;
-    QSortFilterProxyModel proxy;
 
     void setupTable();
 

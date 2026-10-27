@@ -13,9 +13,9 @@ private:
 public:
     explicit UserModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {};
 
-    void setUsers(QVector<User> n_users) {
+    void setUsers(const QVector<User>& n_users) {
         beginResetModel();
-        users = std::move(n_users);
+        users = n_users;
         endResetModel();
     }
 
@@ -29,7 +29,7 @@ public:
 
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
         if (!index.isValid())
-            return {};
+            return QVariant();
 
         const User &u = users.at(index.row());
         if (role == Qt::DisplayRole) {
@@ -38,12 +38,14 @@ public:
                 return u.username;
             case 1:
                 return u.email;
+            default:
+                return QVariant();
             }
         }
         if (role == Qt::TextAlignmentRole && index.column() == 0) {
             return Qt::AlignCenter;
         }
-        return {};
+        return QVariant();
     }
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
@@ -51,7 +53,7 @@ public:
         static const QStringList names{"Имя пользователя", "Email"};
         if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
             return names.value(section);
-        return {};
+        return QVariant();
     }
 };
 
